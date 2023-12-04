@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Connect 4!</title>
+    </head>
+    <body>
+        <h1>Let's Play Connect 4!</h1>
+        <div id="players">
+            <div id="player1">
+                Player 1:
+            </div>
+            <input type"text" id="p1name">
+            <b><div id="p1Appear">
+            </div></b>
+            <div id="player2">&nbsp;&nbsp; 
+                Player 2:
+            </div>
+            <input type"text" id="p2name">
+            <div id="vs">
+            </div>
+            <b><div id="p2Appear">
+            </div></b>
+        </div>
+        <div id = "score"></div>
+        <div id="board">
+        </div>
+        <div id="winDisplay">
+            <div id="innerText">
+                <h1 id="winner"></h1>
+                <br>
+                <div id="againButtons">
+                    <button onclick="playAgain()" id="playAgain">Play Again?</button>
+                    <button onclick="reset()" id="reset2">Reset Game</button>
+                </div>
+            </div>
+        </div>
+        <br>
+        <button onclick="reset()" id="reset">Reset Game</button>
+        <script>
+            p1score = 0;
+            p2score = 0;
+
+            turn = 1;
+            spots = [0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0];
+
+
+            board = document.querySelector("#board");
+            let currentHover = -1;
+            let dropping = false;
+
+            for(let i = 0; i < 42; i++){
+                let space = document.createElement("div");
+                space.className = "space";
+                board.appendChild(space);
+
+                space.onmouseenter = () => {
+                    onMouseEntered(i%7);
+                }
+                space.onclick = () => {
+                    if(!dropping){
+                        onMouseClicked(i%7);
+                    }
+                    
+                }
+            }
+            document.getElementById("score").innerHTML = p1score + " : " + p2score;
+            function reset(){
+                setTimeout(function(){
+                    window.location.reload(1);
+                }, 0);
+                
+            }
+            function onMouseEntered(column){
+                currentHover = column;
+                if(!dropping){
+                    updateTop();
+                }
+            }
+            function playAgain(){
+                document.getElementById("winDisplay").style.display = "none";
+                turn = 1;
+                spots = [0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0];
+                board.innerHTML = '';
+                for(let i = 0; i < 42; i++){
+                    let space = document.createElement("div");
+                    space.className = "space";
+                    board.appendChild(space);
+
+                    space.onmouseenter = () => {
+                        onMouseEntered(i%7);
+                    }
+                    space.onclick = () => {
+                        if(!dropping){
+                            onMouseClicked(i%7);
+                        }
+                        
+                    }
+                }
+            }
+
+            function onMouseClicked(column){
+                if(!document.getElementById("p1name").value == "" && !document.getElementById("p2name").value == ""){
+                    document.getElementById("p1name").style.display = "none";
+                    document.getElementById("p2name").style.display = "none";
+                    document.getElementById("player1").style.display = "none";
+                    document.getElementById("player2").style.display = "none";
+                    document.getElementById("p1Appear").innerHTML = document.getElementById("p1name").value;
+                    document.getElementById("p1Appear").style.display = "inline";
+                    document.getElementById("vs").innerHTML = " vs ";
+                    document.getElementById("vs").style.display = "inline";
+                    document.getElementById("p2Appear").innerHTML = document.getElementById("p2name").value
+                    document.getElementById("p2Appear").style.display = "inline";
+                    let nextUp = spots.filter( (_, index) => index%7 == column).lastIndexOf(0);
+                    let space = board.children[column + (nextUp*7)];
+                    let top = document.createElement("div");
+                    top.className = "top";
+                    top.dataset.added = true;
+                    top.dataset.turn = turn;
+                    space.appendChild(top);
+                    let hoverPiece = document.querySelector("[data-added='false']");
+                    let hoverY = hoverPiece.getBoundingClientRect().y;
+                    let bottomY = top.getBoundingClientRect().y;
+                    let yDrop = hoverY - bottomY;
+                    let drop = top.animate([{transform:`translateY(${yDrop}px`, offset: 0}],{duration:200,easing:"linear",iteration: 1});
+                    dropping = true;
+                    removeHover();
+                    drop.addEventListener('finish', () => checkForWin());
+                    spots[column + (nextUp*7)] = turn;
+                }
+                
+                
+            }
+
+            function removeHover(){
+                let hoverPiece = document.querySelector("[data-added='false']");
+                if(hoverPiece){
+                    hoverPiece.parentElement.removeChild(hoverPiece);
+                }
+            }
+
+
+            function updateTop(){
+                removeHover();
+                if(spots[currentHover] == 0){
+                    let space = board.children[currentHover];
+                    let top = document.createElement("div");
+                    top.className = "top";
+                    top.dataset.added = false;
+                    top.dataset.turn = turn;
+                    space.appendChild(top);
+                } 
+            }
+
+            function checkForWin(){
+                dropping = false;
+                if(playerWin(turn, spots)){
+                    if(turn == 1){
+                        p1score += 1;
+                        document.getElementById("winDisplay").style.display = "block";
+                        document.getElementById("winner").innerHTML = document.getElementById("p1name").value + " Won!"
+                    }
+                    else{
+                        p2score += 1;
+                        document.getElementById("winDisplay").style.display = "block";
+                        document.getElementById("winner").innerHTML = document.getElementById("p2name").value + " Won!"
+                    }
+                }
+                if(!spots.includes(0)){
+                    document.getElementById("winDisplay").style.display = "block";
+                    document.getElementById("winner").innerHTML = "It's a Draw!"
+                }
+
+                if(turn == 1){
+                    turn = 2;
+                }
+                else{
+                    turn = 1;
+                }
+                document.getElementById("score").innerHTML = p1score + " : " + p2score;
+                updateTop(); 
+            }
+            function playerWin(turn, spots){
+                for (let i = 0; i <42; i++){
+                    if(i%7 < 4){
+                        if(spots[i] == turn && spots[i+1] == turn
+                        && spots[i+2] == turn && spots[i+3] == turn){
+                            return(true);
+                        }
+                    }
+                    if(i <= 20){
+                        if(spots[i] == turn && spots[i+7] == turn
+                        && spots[i+14] == turn && spots[i+21] == turn){
+                            return(true);
+                        }
+                    }
+                    if(i%7 < 4 && i <=20){
+                        if(spots[i] == turn && spots[i+8] == turn
+                        && spots[i+16] == turn && spots[i+24] == turn){
+                            return(true);
+                        }
+                    }
+                    if(i%7 > 2 && i <=20){
+                        if(spots[i] == turn && spots[i+6] == turn
+                        && spots[i+12] == turn && spots[i+18] == turn){
+                            return(true);
+                        }
+                    }
+                }
+                return(false);
+            }
+
+        </script>
+        <style>
+            *{
+                font-family: 'Courier New', Courier, monospace;
+            }
+            h1{
+                font-size:60px;
+                margin: 0vh;
+            }
+            p{
+                font-size:30px;
+                margin: 0;
+                display: inline;
+            }
+            body{
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                background-color:rgb(183, 255, 253);
+                
+            }
+            input{
+                height:45px;
+                width:200px;
+                border-radius:10px;
+                font-size:xx-large;
+            }
+            #board{
+                align-content: center;
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                grid-template-rows: repeat(6, 1fr);
+                width: 70vmin;
+                height: 60vmin;
+                justify-content: center;
+                padding-top:10vmin;
+            }
+            .space{
+                display: flex;
+                background-image: radial-gradient(transparent 65%, rgb(0, 110, 173) 50%)
+            }
+            .top{
+                border-radius: 50%;
+                flex-grow: 1;
+            }
+            .top[data-added='false']{
+                transform: translateY(-10vmin);
+            }
+            .top[data-turn='1']{
+                border: 3px solid black;
+                background-color: rgb(121, 1, 73);
+            }
+            .top[data-turn='2']{
+                border: 3px solid black;
+                background-color: rgb(255, 110, 57);
+            }
+            button{
+                height:45px;
+                font-size:30px;
+            }
+            #players{
+                margin: 5px;
+                display: inline;
+                font-size:30px;
+            }
+            #player1{
+                margin: 5px;
+                display: inline;
+                font-size:30px;
+            }
+            #p1name{
+                margin: 5px;
+                display: inline;
+                font-size:30px;
+            }
+            #player2{
+                margin: 5px;
+                display: inline;
+                font-size:30px;
+            }
+            #p2name{
+                margin: 5px;
+                display: inline;
+                font-size:30px;
+            }
+            #p1Appear{
+                margin: 5px;
+                display: inline;
+                font-size:45px;
+                color:rgb(121, 1, 73);
+            }
+            #p2Appear{
+                margin: 5px;
+                display: inline;
+                font-size:45px;
+                color:rgb(255, 110, 57);
+            }
+            #vs{
+                margin: 5px;
+                display: inline;
+                font-size:40px;
+            }
+            #score{
+                margin: 5px;
+                display: inline;
+                font-size:40px;
+            }
+
+            #winDisplay{
+                display:none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(122, 122, 122, .65);
+                padding-top: 15vh;
+            }
+            #innerText{
+                width: 50vw;
+                margin: auto;
+                padding: .5vmin;
+                background-color: rgb(213, 225, 247);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            #reset2{
+                background-color: rgb(209, 52, 86);
+            }
+            #playAgain{
+                background-color: rgb(0, 244, 7);
+            }
+            #reset{
+                background-color: rgb(209, 52, 86);
+            }
+        </style>
+    </body>
+</html>
